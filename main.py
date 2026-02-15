@@ -154,5 +154,9 @@ async def analyze_text(request: AnalysisRequest):
 if __name__ == "__main__":
     print("🚀 Starting VoiceScribe AI...")
     print(f"📍 Vosk Model: {MODEL_PATH}")
-    print(f"🌐 Server running at http://localhost:8000")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+    port = int(os.environ.get("PORT", 8000))
+
+    print(f"🌐 Server running on 0.0.0.0:{port}")
+
+    uvicorn.run(app, host="0.0.0.0", port=port)
