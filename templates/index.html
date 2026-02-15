@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceScribe | Precision Audio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/assets/logo.webp">
+    <style>
+        :root {
+            --brand-dark: #0f172a;
+            --brand-accent: #22d3ee;
+            /* Electric Cyan */
+            --brand-soft: #f1f5f9;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+            background-image:
+                radial-gradient(circle at 2px 2px, #e2e8f0 1px, transparent 0);
+            background-size: 40px 40px;
+            min-height: 100vh;
+        }
+
+        .console-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .accent-gradient {
+            background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+        }
+
+        .btn-primary {
+            background: #0f172a;
+            color: #22d3ee;
+            transition: all 0.2s ease;
+            border: 1px solid #1e293b;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #1e293b;
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .recording-glow {
+            animation: glow-pulse 2s infinite;
+        }
+
+        @keyframes glow-pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 15px rgba(34, 211, 238, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(34, 211, 238, 0);
+            }
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        /* New Active State for Modes */
+        .mode-active {
+            border-color: #22d3ee !important;
+            background: #f0fdfa !important;
+            color: #0f172a !important;
+        }
+    </style>
+</head>
+
+<body class="flex flex-col p-3 sm:p-4 md:p-6 lg:p-8 overflow-x-hidden">
+
+    <header class="flex justify-between items-center mb-8">
+        <div class="flex items-center gap-3">
+            <div>
+                <img src="/assets/logo.webp" alt="Logo" class="w-12 h-12">
+            </div>
+            <h1 class="text-xl font-800 tracking-tighter text-slate-900 uppercase">
+                <span>Voice</span>
+                <span class="text-cyan-500">Scribe</span>
+                <span class="ml-1">AI</span>
+            </h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <div
+                class="px-3 py-1 rounded-md border border-slate-200 bg-white text-[10px] font-bold text-slate-500 flex items-center gap-2">
+                <span id="statusDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                RECORDING STATUS
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0 overflow-visible">
+
+        <div class="lg:col-span-4 flex flex-col gap-6 max-w-2xl mx-auto w-full">
+
+            <div
+                class="console-card rounded-[2rem] p-5 sm:p-6 md:p-8 flex flex-col items-center justify-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-slate-100">
+                    <div id="progressBar" class="h-full bg-cyan-400 w-0 transition-all duration-300"></div>
+                </div>
+
+                <button onclick="toggleRecording()" id="micBtn"
+                    class="w-24 h-24 bg-slate-900 rounded-full flex items-center justify-center text-cyan-400 shadow-2xl transition-all active:scale-95 group">
+                    <svg id="micIcon" class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 10v1a7 7 0 01-14 0v-1m14 0a7 7 0 00-7 7m0 0a7 7 0 00-7-7"></path>
+                    </svg>
+                    <svg id="stopIcon" class="hidden w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
+                        <rect x="6" y="6" width="12" height="12" rx="2"></rect>
+                    </svg>
+                </button>
+
+                <div class="mt-6 text-center">
+                    <p id="statusTxt" class="text-slate-900 font-800 uppercase tracking-widest text-xs">Ready for
+                        Session</p>
+                    <p class="text-slate-400 text-[10px] mt-1 font-bold">AUTO-SYNC ENABLED</p>
+                </div>
+            </div>
+
+            <div class="console-card rounded-[2rem] p-6 flex flex-col gap-4">
+                <h3 class="text-[10px] font-800 text-slate-400 uppercase tracking-[0.2em] mb-2 px-2">Analysis Option
+                </h3>
+
+                <div class="space-y-2">
+                    <button id="mode-summary" onclick="setMode('summary')"
+                        class="mode-active w-full flex items-center justify-between p-4 rounded-2xl border border-slate-200 bg-white text-slate-600 transition-all group">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6h16M4 12h16m-7 6h7"></path>
+                            </svg>
+                            <span class="font-700 text-sm">Summary</span>
+                        </div>
+                        <svg class="w-4 h-4 opacity-0 group-[.mode-active]:opacity-100" fill="currentColor"
+                            viewBox="0 0 20 20">
+                            <path
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293l-4 4a1 1 0 01-1.414 0l-2-2a1 1 0 111.414-1.414L9 10.586l3.293-3.293a1 1 0 111.414 1.414z">
+                            </path>
+                        </svg>
+                    </button>
+
+                    <button id="mode-action" onclick="setMode('action')"
+                        class="w-full flex items-center justify-between p-4 rounded-2xl border border-slate-200 bg-white text-slate-600 transition-all group">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
+                                </path>
+                            </svg>
+                            <span class="font-700 text-sm">Bullet Point</span>
+                        </div>
+                        <svg class="w-4 h-4 opacity-0 group-[.mode-active]:opacity-100" fill="currentColor"
+                            viewBox="0 0 20 20">
+                            <path
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293l-4 4a1 1 0 01-1.414 0l-2-2a1 1 0 111.414-1.414L9 10.586l3.293-3.293a1 1 0 111.414 1.414z">
+                            </path>
+                        </svg>
+                    </button>
+                </div>
+
+                <button onclick="analyzeWithAI()" id="analyzeBtn" disabled
+                    class="btn-primary w-full py-4 rounded-2xl font-800 text-xs tracking-widest uppercase disabled:opacity-20 disabled:grayscale mt-2 flex items-center justify-center gap-3">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a2 2 0 00-1.96 1.414l-.477 2.387a2 2 0 00.547 1.022l1.428 1.428a2 2 0 002.828 0l1.428-1.428a2 2 0 00.547-1.022l.477-2.387a2 2 0 00-1.414-1.96l-2.387-.477a2 2 0 00-1.022.547l-1.428 1.428a2 2 0 000 2.828l1.428 1.428z">
+                        </path>
+                    </svg>
+                    Execute Analysis
+                </button>
+            </div>
+        </div>
+
+        <div class="lg:col-span-8 grid grid-rows-1 lg:grid-rows-5 gap-6 min-h-0">
+
+            <div class="row-span-3 console-card rounded-[2rem] p-5 sm:p-6 md:p-8 flex flex-col min-h-0">
+                <div class="flex justify-between items-center mb-6 shrink-0">
+                    <h3 class="font-800 text-slate-900 text-sm tracking-widest flex items-center gap-2">
+                        <span class="w-1.5 h-4 bg-cyan-400 rounded-full"></span>
+                        LIVE STREAM
+                    </h3>
+                    <button onclick="clearTranscript()"
+                        class="text-[10px] font-800 text-slate-400 hover:text-red-500 transition-colors tracking-widest uppercase">Reset</button>
+                </div>
+
+                <div id="transcriptBox"
+                    class="flex-1 custom-scrollbar overflow-y-auto pr-4 text-slate-900 text-xl sm:text-2xl md:text-4xl leading-tight font-extrabold tracking-tight">
+                    <span class="text-slate-300 text-lg font-medium">System standby... awaiting audio signal.</span>
+                </div>
+
+                <div id="partialText"
+                    class="h-10 mt-4 text-cyan-500 font-bold text-xl italic overflow-hidden whitespace-nowrap overflow-ellipsis border-t border-slate-100 pt-2">
+                </div>
+            </div>
+
+            <div
+                class="row-span-2 bg-slate-900 rounded-[2rem] p-5 sm:p-6 md:p-8 flex flex-col min-h-0 border border-slate-800 shadow-2xl relative">
+                <div class="flex items-center gap-3 mb-4 shrink-0">
+                    <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+                        </path>
+                    </svg>
+                    <h3 class="text-white font-800 text-[10px] tracking-[0.3em] uppercase">AI Insight</h3>
+                </div>
+
+                <div id="aiOutput"
+                    class="flex-1 custom-scrollbar overflow-y-auto text-slate-300 font-medium text-lg leading-relaxed">
+                </div>
+
+                <div id="aiLoading"
+                    class="hidden absolute inset-0 bg-slate-900/90 rounded-[2rem] flex items-center justify-center gap-3 z-10">
+                    <div class="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                    <div class="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                    <div class="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style="animation-delay: 0.3s"></div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        let isRecording = false;
+        let currentMode = 'summary';
+        let fullTranscript = '';
+        let ws = null;
+        let audioContext = null;
+        let processor = null;
+
+        function toggleRecording() {
+            if (!isRecording) startRecording();
+            else stopRecording();
+        }
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+                ws.onopen = () => {
+                    isRecording = true;
+                    updateUI(true);
+                    setupAudio(stream);
+                };
+
+                ws.onmessage = (e) => {
+                    const data = JSON.parse(e.data);
+                    if (data.type === 'final') appendTranscript(data.text);
+                    else if (data.type === 'partial') document.getElementById('partialText').innerText = data.text;
+                };
+            } catch (err) { alert("Mic required."); }
+        }
+
+        function setupAudio(stream) {
+            audioContext = new AudioContext({ sampleRate: 16000 });
+            const source = audioContext.createMediaStreamSource(stream);
+            processor = audioContext.createScriptProcessor(4096, 1, 1);
+            processor.onaudioprocess = (e) => {
+                if (!isRecording || ws.readyState !== WebSocket.OPEN) return;
+                const inputData = e.inputBuffer.getChannelData(0);
+                const int16Data = new Int16Array(inputData.length);
+                for (let i = 0; i < inputData.length; i++) {
+                    int16Data[i] = Math.max(-32768, Math.min(32767, inputData[i] * 32768));
+                }
+                ws.send(int16Data.buffer);
+            };
+            source.connect(processor);
+            processor.connect(audioContext.destination);
+        }
+
+        function stopRecording() {
+            isRecording = false;
+            if (processor) processor.disconnect();
+            if (ws) ws.close();
+            updateUI(false);
+            document.getElementById('analyzeBtn').disabled = fullTranscript.length < 5;
+        }
+
+        function updateUI(rec) {
+            const btn = document.getElementById('micBtn');
+            const status = document.getElementById('statusTxt');
+            const dot = document.getElementById('statusDot');
+
+            if (rec) {
+                btn.classList.add('recording-glow', 'border-cyan-400', 'border-2');
+                document.getElementById('micIcon').classList.add('hidden');
+                document.getElementById('stopIcon').classList.remove('hidden');
+                status.innerText = "Capturing Stream...";
+                status.classList.add('text-cyan-500');
+                dot.classList.replace('bg-emerald-500', 'bg-red-500');
+            } else {
+                btn.classList.remove('recording-glow', 'border-cyan-400', 'border-2');
+                document.getElementById('micIcon').classList.remove('hidden');
+                document.getElementById('stopIcon').classList.add('hidden');
+                status.innerText = "Session Paused";
+                status.classList.remove('text-cyan-500');
+                dot.classList.replace('bg-red-500', 'bg-emerald-500');
+            }
+        }
+
+        function appendTranscript(text) {
+            if (!text.trim()) return;
+            fullTranscript += text + " ";
+            const box = document.getElementById('transcriptBox');
+            if (box.innerText.includes('System standby')) box.innerHTML = '';
+
+            const span = document.createElement('span');
+            span.className = 'text-slate-900 transition-all';
+            span.innerText = text + " ";
+            box.appendChild(span);
+            box.scrollTop = box.scrollHeight;
+            document.getElementById('partialText').innerText = '';
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('mode-summary').classList.toggle('mode-active', mode === 'summary');
+            document.getElementById('mode-action').classList.toggle('mode-active', mode === 'action');
+        }
+
+        async function analyzeWithAI() {
+            const out = document.getElementById('aiOutput');
+            const loader = document.getElementById('aiLoading');
+            loader.classList.remove('hidden');
+            out.innerHTML = '';
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        mode: currentMode,
+                        text: fullTranscript
+                    })
+                });
+                const data = await response.json();
+                out.innerText = data.result;
+            } catch { out.innerText = "Pipeline error."; }
+            finally { loader.classList.add('hidden'); }
+        }
+
+        function clearTranscript() {
+            fullTranscript = '';
+            document.getElementById('transcriptBox').innerHTML = '<span class="text-slate-300">System standby... awaiting audio signal.</span>';
+            document.getElementById('aiOutput').innerText = '';
+            document.getElementById('analyzeBtn').disabled = true;
+        }
+
+        window.onkeydown = (e) => { if (e.code === 'Space') { e.preventDefault(); toggleRecording(); } };
+    </script>
+</body>
+
+</html>
