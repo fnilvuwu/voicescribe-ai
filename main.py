@@ -35,7 +35,7 @@ model = Model(MODEL_PATH)
 
 # Initialize Gemini
 client = genai.Client(api_key=GEMINI_API_KEY)
-gemini_model = "gemini-2.0-flash-exp"
+gemini_model = "gemini-2.5-flash"
 
 app = FastAPI(title="VoiceScribe AI")
 
@@ -142,12 +142,22 @@ async def analyze_text(request: AnalysisRequest):
             prompt = request.prompt
 
         print(f"🤖 Gemini analyzing with mode: {request.mode}")
+        print(f"🤖 Prompt length: {len(prompt)}")
 
         response = client.models.generate_content(model=gemini_model, contents=prompt)
 
-        return AnalysisResponse(result=response.text)
+        print(f"🤖 Response type: {type(response)}")
+        print(f"🤖 Response attributes: {dir(response)}")
+
+        # Extract text from response
+        result_text = response.text if hasattr(response, "text") else str(response)
+
+        return AnalysisResponse(result=result_text)
 
     except Exception as e:
+        import traceback
+
+        print(f"❌ Full error: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"AI Analysis failed: {str(e)}")
 
 

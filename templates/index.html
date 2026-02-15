@@ -103,7 +103,7 @@
             <div
                 class="px-3 py-1 rounded-md border border-slate-200 bg-white text-[10px] font-bold text-slate-500 flex items-center gap-2">
                 <span id="statusDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                RECORDING STATUS
+                RECORDING STATUS - VOSK SMALL MODEL
             </div>
         </div>
     </header>
@@ -351,7 +351,8 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         mode: currentMode,
-                        text: fullTranscript
+                        text: fullTranscript,
+                        prompt: ''
                     })
                 });
                 const data = await response.json();
